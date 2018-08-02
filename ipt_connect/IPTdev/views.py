@@ -1,6 +1,6 @@
 # coding: utf8
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.cache import cache_page
 from models import *
 from django.contrib.auth.decorators import user_passes_test
@@ -148,6 +148,8 @@ def jury_detail(request, pk):
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
 def tournament_overview(request):
+	return redirect('/IPT%s/poolranking' % params.app_version)
+	
 	rounds = Round.objects.all()
 
 	teams = Team.objects.all()
