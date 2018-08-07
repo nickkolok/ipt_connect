@@ -34,4 +34,5 @@ urlpatterns = [
     url(r'^soon', soon),
     url(r'^update_all', update_all),
 	url(r'^upload_csv', upload_csv, name='upload_csv'),
+	url(r'^download_certs', download_certs),
 ]
