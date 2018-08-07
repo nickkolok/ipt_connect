@@ -6,6 +6,7 @@ from models import *
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.translation import get_language
+from django.template.loader import render_to_string
 from forms import UploadForm
 import csv
 import parameters as params
@@ -517,3 +518,13 @@ def upload_csv(request):
 		form = UploadForm()
 
 	return render(request, 'IPT%s/upload_csv.html' % params.app_version, {'form': form, 'name': params.NAME})
+
+@user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
+@cache_page(cache_duration)
+def download_certs(request):
+	participants = Participant.objects.all()
+	persons = [x for x in participants]
+	result = render_to_string('IPT%s/certs.html' % params.app_version, {'persons': persons})
+	response = HttpResponse(result, content_type='application/vnd.oasis.opendocument.text-flat-xml')
+	response['Content-Disposition'] = 'inline; filename=certs.fodt'
+	return response
