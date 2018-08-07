@@ -91,6 +91,7 @@ class Participant(models.Model):
 	# parameters
 	name = models.CharField(max_length=50,default=None,verbose_name='Name')
 	surname = models.CharField(max_length=50,default=None,verbose_name='Surname')
+	patronymic = models.CharField(max_length=50,default=None,verbose_name='Patronymic',blank=True,null=True)
 	gender = models.CharField(max_length=1,choices=GENDER_CHOICES,verbose_name='Gender')
 	email = models.EmailField(help_text='This address will be used to send the participant every important infos about the tournament.',verbose_name='Email')
 	phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
@@ -101,6 +102,7 @@ class Participant(models.Model):
 	team = models.ForeignKey('Team', null=True,verbose_name='Team')
 	role = models.CharField(max_length=20,choices=ROLE_CHOICES,help_text="The team must consist of a Team Captain (student), between two and five Team Members (students), and between one and two Team Leaders (Prof., PhD, Postdoc in physics). Don't forget to register yourself!", default="TM",verbose_name='Role')
 	affiliation = models.CharField(max_length=50,default='XXX University')
+	school_class = models.IntegerField(default=0,blank=True,null=True)
 	veteran = models.BooleanField(default=False,help_text="Has the participant already participated in the IPT? (informative only)",verbose_name='Veteran')
 	diet = models.CharField(max_length=20,choices=DIET_CHOICES,help_text='Does the participant have a specific diet?')
 	mixed_gender_accommodation = models.BooleanField(default=True,help_text="Is it ok for the participant to be in a mixed gender hotel room?",verbose_name='Mixed gender accommodation?')
