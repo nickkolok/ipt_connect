@@ -507,7 +507,7 @@ def upload_csv(request):
 			for row in reader:
 				Participant.objects.get_or_create(
 					gender=row[0],
-					school_class=row[1],
+					school_class=row[1] if isinstance(row[1], int) and 0 < row[1] < 13 else 0,
 					affiliation=row[2],
 					surname=row[3],
 					name=row[4],
