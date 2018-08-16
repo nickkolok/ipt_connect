@@ -522,9 +522,35 @@ def upload_csv(request):
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
 def download_certs(request):
-	participants = Participant.objects.all()
-	persons = [x for x in participants]
-	result = render_to_string('IPT%s/certs.html' % params.app_version, {'persons': persons})
+
+	def find_best(role):
+		best_text = {
+			'reporter': u'докладчиком',
+			'opponent': u'оппонентом',
+			'reviewer': u'рецензентом'
+		}
+		score_role = 'score_' + role
+		rounds = Round.objects.all()
+		max_round = max(rounds, key=lambda x: getattr(x, score_role))
+		max_score = getattr(max_round, score_role)
+		result = []
+		for x in rounds:
+			person = getattr(x, role)
+			if getattr(x, score_role) == max_score:
+				person.best_text = best_text[role]
+				# person.score = max_score
+				# person.problem_name = x.problem_presented
+				result.append(person)
+		return result
+
+	is_best = request.GET.get('best', False)
+
+	if is_best:
+		persons = find_best('reporter') + find_best('opponent') + find_best('reviewer')
+	else:
+		participants = Participant.objects.all()
+		persons = [x for x in participants]
+	result = render_to_string('IPT%s/certs.html' % params.app_version, {'persons': persons, 'is_best': is_best})
 	response = HttpResponse(result, content_type='application/vnd.oasis.opendocument.text-flat-xml')
 	response['Content-Disposition'] = 'inline; filename=certs.fodt'
 	return response
