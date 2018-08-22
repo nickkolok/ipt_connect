@@ -48,3 +48,20 @@ Language files compiled automatically when the server starts.
 * Run `python manage.py makemessages -l de -e=html -i=grappelli/*` where `de` is the [locale name](https://docs.djangoproject.com/en/2.0/topics/i18n/#term-locale-name) for the message file you want to create.
 * Translate all text in the file, which will be create.
 * Run application.
+
+### How to download certificates?
+* Sign in as superuser.
+* <a href="http://127.0.0.1:8000/IPTdev/download_certs/">http://127.0.0.1:8000/IPTdev/download_certs/</a> - download all certificates.
+* <a href="http://127.0.0.1:8000/IPTdev/download_certs?best=1/">http://127.0.0.1:8000/IPTdev/download_certs?best=1/</a> - download certificates for the best participants.
+
+### How to add participants from .csv file?
+* Sign in as superuser.
+* Go to <a href="http://127.0.0.1:8000/IPTdev/upload_csv/">http://127.0.0.1:8000/IPTdev/upload_csv/</a> and upload your .csv file.
+
+.csv file must be in the following format:
+```
+"Gender","Class","Educational institution","Surname","Name","Patronymic"
+"м",9,"МБОУ Лицей №15","Иванов","Иван","Иванович"
+"ж",10,"МБОУ СОШ № 80","Петрова","Мария","Петровна"
+...
+```
