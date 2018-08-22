@@ -49,6 +49,25 @@ Language files compiled automatically when the server starts.
 * Translate all text in the file, which will be create.
 * Run application.
 
-### How start new tournament?
+### How to download certificates?
+* Sign in as superuser.
+* <a href="http://127.0.0.1:8000/IPTdev/download_certs/">http://127.0.0.1:8000/IPTdev/download_certs/</a> - download all certificates.
+* <a href="http://127.0.0.1:8000/IPTdev/download_certs?best=1/">http://127.0.0.1:8000/IPTdev/download_certs?best=1/</a> - download certificates for the best participants.
+* <a href="http://127.0.0.1:8000/IPTdev/download_certs?team=1/">http://127.0.0.1:8000/IPTdev/download_certs?team=1/</a> - download certificates for the best teams.
+
+### How to add participants from .csv file?
+* Sign in as superuser.
+* Go to <a href="http://127.0.0.1:8000/IPTdev/upload_csv/">http://127.0.0.1:8000/IPTdev/upload_csv/</a> and upload your .csv file.
+
+.csv file must be in the following format:
+```
+"Gender","Class","Educational institution","Surname","Name","Patronymic"
+"м",9,"МБОУ Лицей №15","Иванов","Иван","Иванович"
+"ж",10,"МБОУ СОШ № 80","Петрова","Мария","Петровна"
+...
+```
+
+### How to start a new tournament?
 * Run `python manage.py flush`
 * Sign in as superuser and add new participants, jury members and etc.
+
