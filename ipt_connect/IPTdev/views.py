@@ -527,9 +527,9 @@ def download_certs(request):
 
 	def find_best(role):
 		best_text = {
-			'reporter': u'докладчиком',
-			'opponent': u'оппонентом',
-			'reviewer': u'рецензентом'
+			'reporter': u'докладчик',
+			'opponent': u'оппонент',
+			'reviewer': u'рецензент'
 		}
 		score_role = 'score_' + role
 		rounds = Round.objects.all()

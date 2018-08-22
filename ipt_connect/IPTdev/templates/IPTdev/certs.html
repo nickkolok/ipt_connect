@@ -552,11 +552,11 @@
    </text:p>
    <text:p text:style-name="P34">{{ x.affiliation }}</text:p>
    {% if is_best %}
-   <text:p text:style-name="P1">стал<text:span text:style-name="T4">{% if x.gender == "ж" %}а{% endif %}</text:span> лучшим {{ x.best_text }} в </text:p>
+   <text:p text:style-name="P1">лучший {{ x.best_text }}</text:p>
    {% else %}
    <text:p text:style-name="P1">принял<text:span text:style-name="T4">{% if x.gender == "ж" %}а{% endif %}</text:span> участие в </text:p>
    {% endif %}
-   <text:p text:style-name="P1">турнире «Золотое сечение» в Репном</text:p>
+   <text:p text:style-name="P1">турнир{% if is_best %}а{% else %}е{% endif %} «Золотое сечение» в Репном</text:p>
    <text:p text:style-name="P1">(<text:span text:style-name="T4">Первая Лига</text:span>)</text:p>
    <text:p text:style-name="Standard"/>
    <text:p text:style-name="P5"/>
