@@ -65,3 +65,7 @@ Language files compiled automatically when the server starts.
 "ж",10,"МБОУ СОШ № 80","Петрова","Мария","Петровна"
 ...
 ```
+
+### How start new tournament?
+* Run `python manage.py flush`
+* Sign in as superuser and add new participants, jury members and etc.
