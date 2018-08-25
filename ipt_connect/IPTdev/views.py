@@ -547,10 +547,11 @@ def download_certs(request):
 
 	if is_best:
 		persons = find_best('reporter') + find_best('opponent') + find_best('reviewer')
+		result = render_to_string('IPT%s/cert_best.html' % params.app_version, {'persons': persons})
 	else:
 		participants = Participant.objects.all()
 		persons = [x for x in participants]
-	result = render_to_string('IPT%s/certs.html' % params.app_version, {'persons': persons, 'is_best': is_best})
+		result = render_to_string('IPT%s/cert_participant.html' % params.app_version, {'persons': persons})
 	response = HttpResponse(result, content_type='application/vnd.oasis.opendocument.text-flat-xml')
 	response['Content-Disposition'] = 'inline; filename=certs.fodt'
 	return response
