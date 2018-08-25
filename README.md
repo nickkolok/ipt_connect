@@ -53,6 +53,7 @@ Language files compiled automatically when the server starts.
 * Sign in as superuser.
 * <a href="http://127.0.0.1:8000/IPTdev/download_certs/">http://127.0.0.1:8000/IPTdev/download_certs/</a> - download all certificates.
 * <a href="http://127.0.0.1:8000/IPTdev/download_certs?best=1/">http://127.0.0.1:8000/IPTdev/download_certs?best=1/</a> - download certificates for the best participants.
+* <a href="http://127.0.0.1:8000/IPTdev/download_certs?team=1/">http://127.0.0.1:8000/IPTdev/download_certs?team=1/</a> - download certificates for the best teams.
 
 ### How to add participants from .csv file?
 * Sign in as superuser.
