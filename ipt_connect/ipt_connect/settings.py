@@ -44,7 +44,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'IPTdev',
-    'Repnoe2018_7'
+    'Repnoe2018_7',
+    'Repnoe2018_9'
 )
 
 MIDDLEWARE_CLASSES = (

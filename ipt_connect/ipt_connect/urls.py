@@ -15,7 +15,8 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/', include('loginas.urls')),
     url(r'^IPTdev/', include('IPTdev.urls', namespace='IPTdev')),
-    url(r'^Repnoe2018_7/', include('Repnoe2018_7.urls', namespace='IPTrepnoe7'))
+    url(r'^Repnoe2018_7/', include('Repnoe2018_7.urls', namespace='IPTrepnoe7')),
+    url(r'^Repnoe2018_9/', include('Repnoe2018_9.urls', namespace='IPTrepnoe9'))
 ]
 
 

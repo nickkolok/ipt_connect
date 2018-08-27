@@ -1,0 +1,15 @@
+{% extends "IPTrepnoe9/certs.html" %}
+
+{% block certtext %}
+{% for place, name in teams %}
+   <text:p text:style-name="P47">награждается команда</text:p>
+   <text:p text:style-name="P19"/>
+   <text:p text:style-name="P46"><text:span text:style-name="T1">{{ name }}</text:span></text:p>
+   <text:p text:style-name="P34">занявшая {{ place }} место</text:p>
+   <text:p text:style-name="P1">в турнире «Золотое сечение» в Репном</text:p>
+   <text:p text:style-name="P1"></text:p>
+   <text:p text:style-name="P1">(<text:span text:style-name="T4">Первая Лига</text:span>)</text:p>
+   <text:p text:style-name="Standard"/>
+   <text:p text:style-name="P5"/>
+{% endfor %}
+{% endblock %}
