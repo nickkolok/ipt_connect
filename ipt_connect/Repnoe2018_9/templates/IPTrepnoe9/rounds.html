@@ -1,0 +1,67 @@
+{% extends 'IPTrepnoe9/head.html' %}
+{% load humanize %}
+{% load i18n %}
+
+{% block content %}
+
+    <div class="section">
+        <h1>{% trans 'Rounds overview' %}</h1>
+    </div>
+
+    <div class="content container">
+        <p class="emphase">{% trans 'Click on a Round to get a detailed summary. Click on a Physics Fight to get a summarized view of all the corresponding Rounds.' %}</p>
+    </div>
+
+    <div class="content container-fluid main-table">
+        <table class="table-borders">
+            <tr>
+                <th></th>
+                <!-- TODO: unhardcode number of Physics Fights! -->
+                <th class="th-center"><a href="{% url 'IPTrepnoe9:physics_fight_detail' pfid=1 %}">{% trans 'Physics Fight' %} 1</a></th>
+                <th class="th-center"><a href="{% url 'IPTrepnoe9:physics_fight_detail' pfid=2 %}">{% trans 'Physics Fight' %} 2</a></th>
+                <th class="th-center"><a href="{% url 'IPTrepnoe9:physics_fight_detail' pfid=3 %}">{% trans 'Physics Fight' %} 3</a></th>
+                <th class="th-center"><a href="{% url 'IPTrepnoe9:physics_fight_detail' pfid=4 %}">{% trans 'Physics Fight' %} 4</a></th>
+            </tr>
+
+            {% for thisroom in orderedroundsperroom %}
+            <tr>
+                <td ><b>{{thisroom.0.0.room}}</b></td>
+                {% for thispf in thisroom %}
+                <td>
+                    <div class="room-list-of-rounds">
+                        {% for round in thispf%}
+                        <div>
+                            <a href="{% url 'IPTrepnoe9:round_detail' pk=round.pk %}">{% trans 'Round' %} {{round.round_number}}</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </td>
+                {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="content container">
+
+        <table>
+            <tr>
+                <td></td>
+                <td class="td-center"><p class="emphase">{% trans 'The Grand Finale' %}</p></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="td-center"><a href="{% url 'IPTrepnoe9:finalround_detail' pk=82 %}">{% trans 'Round' %} 1</a></td>
+                <td class="td-center"><a href="{% url 'IPTrepnoe9:finalround_detail' pk=83 %}">{% trans 'Round' %} 2</a></td>
+                <td class="td-center"><a href="{% url 'IPTrepnoe9:finalround_detail' pk=84 %}">{% trans 'Round' %} 3</a></td>
+
+            </tr>
+            <tr><td><p class="emphase"></p></td></tr>
+
+        </table>
+    </div>
+
+
+   
+{% endblock content %}
