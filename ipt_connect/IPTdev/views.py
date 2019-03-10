@@ -519,7 +519,7 @@ def upload_csv(request):
 
 	return render(request, 'IPT%s/upload_csv.html' % params.app_version, {'form': form, 'name': params.NAME})
 
-@user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
+@user_passes_test(lambda u: u.is_superuser)
 @cache_page(cache_duration)
 def download_certs(request):
 
