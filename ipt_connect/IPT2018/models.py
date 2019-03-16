@@ -716,7 +716,7 @@ update_signal = Signal()
 @receiver(update_signal, sender=Round, dispatch_uid="update_all")
 def update_all(sender, **kwargs):
 
-	allrounds = Round.objects.filter(pf_number=1) | Round.objects.filter(pf_number=2) | Round.objects.filter(pf_number=3) | Round.objects.filter(pf_number=4)
+	allrounds = Round.objects.filter(pf_number=1) | Round.objects.filter(pf_number=2) | Round.objects.filter(pf_number=3) | Round.objects.filter(pf_number=4) | Round.objects.filter(pf_number=5) | Round.objects.filter(pf_number=6)
 	allrounds = sorted(allrounds,key=lambda round : round.round_number, reverse=False)
 
 
