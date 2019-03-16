@@ -335,6 +335,8 @@ class Team(models.Model):
 			p.update_scores()
 
 
+
+
 	@classmethod
 	def fast_ranking(cls):
 		teams = cls.objects.all()
