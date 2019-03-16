@@ -407,7 +407,7 @@ def ranking(request):
 				#team.currentpf = pfsplayed+1
 			team.rank = ind+1
 			if team.rank == 1:
-				team.emphase=True
+				team.emphase = True
 			rankteams.append(team)
 
 	return render(request, 'IPT2018/ranking.html', {'rankteams': rankteams})
