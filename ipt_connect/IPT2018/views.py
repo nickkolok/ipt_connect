@@ -260,6 +260,8 @@ def rounds(request):
 			thisroom.append(Round.objects.filter(pf_number=pf).filter(room=room).order_by('round_number'))
 		orderedroundsperroom.append(thisroom)
 
+
+
 	if with_final_pf :
 		myrounds = Round.objects.filter(pf_number=npf+1)
 		finalrounds = sorted(myrounds, key=lambda round: round.round_number)
