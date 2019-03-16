@@ -335,6 +335,9 @@ def finalround_detail(request, pk):
 
 	return render(request, 'IPT2018/finalround_detail.html', {'round': round, 'jurygrades': jurygrades, 'meangrades': meangrades, "tacticalrejections": tacticalrejections, "eternalrejection": eternalrejection, "started": started, "finished": finished})
 
+
+
+
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT2018/soon')
 @cache_page(cache_duration)
 def physics_fights(request):
