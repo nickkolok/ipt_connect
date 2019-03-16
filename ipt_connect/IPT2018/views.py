@@ -250,14 +250,15 @@ def problem_detail(request, pk):
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT2018/soon')
 @cache_page(cache_duration)
 def rounds(request):
-	rounds = Round.objects.all()
+	qfrounds = Round.objects.filter(pf_number=1) | Round.objects.filter(pf_number=2) | Round.objects.filter(pf_number=3) | Round.objects.filter(pf_number=4)
+
 	rooms = Room.objects.order_by('name')
 
 	orderedroundsperroom=[]
 	for room in rooms:
 		thisroom = []
 		for pf in pfs[:4]:
-			thisroom.append(Round.objects.filter(pf_number=pf).filter(room=room).order_by('round_number'))
+			thisroom.append(qfrounds.filter(pf_number=pf).filter(room=room).order_by('round_number'))
 		orderedroundsperroom.append(thisroom)
 
 
