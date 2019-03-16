@@ -267,7 +267,7 @@ def rounds(request):
 		finalrounds = sorted(myrounds, key=lambda round: round.round_number)
 		try:
 			finalteams = [finalrounds[0].reporter_team, finalrounds[0].opponent_team, finalrounds[0].reviewer_team]
-			finalpoints = [team.points(pfnumber=5, bonuspoints=False) for team in finalteams]
+			finalpoints = [team.points(pfnumber=npf+1, bonuspoints=False) for team in finalteams]
 		except:
 			finalteams = ["---", "---", "---"]
 			finalpoints = [0, 0, 0]
