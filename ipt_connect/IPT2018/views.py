@@ -256,7 +256,7 @@ def rounds(request):
 	orderedroundsperroom=[]
 	for room in rooms:
 		thisroom = []
-		for pf in pfs:
+		for pf in pfs[:4]:
 			thisroom.append(Round.objects.filter(pf_number=pf).filter(room=room).order_by('round_number'))
 		orderedroundsperroom.append(thisroom)
 
