@@ -17,7 +17,7 @@ NAME = {
 }
 
 # Models parameters
-npf = 4                 # Number of Physics fights
+npf = 4                 # Number of selective (qualifying) Physics fights
 with_final_pf = True    # Is there a Final Fight ?
 reject_malus = 0.2      # Malus for too many rejections
 npfreject_max = 3       # Maximum number of tactical rejection (per fight)
