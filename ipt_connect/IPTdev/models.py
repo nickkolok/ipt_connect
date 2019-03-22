@@ -785,26 +785,16 @@ def update_all(sender, **kwargs):
 		update_bonus_points()
 		print "Done!"
 
-	# The query must be refreshed: update_bonus_points() changed rounds and saved them
-	allrounds = Round.objects.all()
-	allrounds = sorted(allrounds,key=lambda round : round.round_number, reverse=False)
 	allteams = Team.objects.all()
 
 
 	#if 1:
 	with transaction.atomic():
-		# update rounds
-		for round in allrounds:
-			# we do not want to add the bonus points now, let's keep that for a next step (just to check, that might disappear later)
-			update_points(sender, instance=round)
-			round.save()
-			#sys.exit()
-
-		print "="*15
 		for team in allteams:
 			#print "----"
 			print team.name, team.total_points
-			team.save()
+			team.update_scores()
+			print team.name, team.total_points
 
 
 		# just in case, update the problems
