@@ -20,6 +20,8 @@ NAME = {
 
 poster_url = 'https://hsto.org/webt/zu/4_/cw/zu4_cwveq1izw4jst5yugtxng5q.png'
 
+website_url = 'http://dev.iptnet.info'
+
 # Models parameters
 npf = 4                 # Number of selective (qualifying) Physics fights
 semifinals_quantity = 2 # Quantity of semifinals. Every semifinal should be a separate fight!
