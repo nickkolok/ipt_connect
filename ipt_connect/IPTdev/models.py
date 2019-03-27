@@ -788,52 +788,54 @@ def get_involved_teams_dict(round_list):
 	return teams_dict
 
 
+def update_bonus_points_for_round(round):
+	bonuspts = {}
+	thispfrounds = Round.objects.filter(pf_number=round.pf_number).filter(room=round.room)
+	thispfteams = get_involved_teams_dict(thispfrounds).keys()
+
+	if thispfrounds.count() != len(thispfteams):
+		return
+
+	# set the bonus points to zero
+	for team in thispfteams:
+		bonuspts[team] = 0.0
+
+	points_dict = {}
+	for team in thispfteams:
+		points_dict[team] = team.get_scores_for_rounds(rounds=thispfrounds, include_bonus=False)
+
+	# get teams sorted by total points for the physics fight
+	team_podium = sorted(thispfteams, key=lambda t: points_dict[t], reverse=True)
+	points_list = [points_dict[t] for t in team_podium]
+
+	bonus_list = distribute_bonus_points(points_list)
+
+	# TODO: rewrite in python-ish way
+	for i in range(len(points_list)):
+		bonuspts[team_podium[i]] = bonus_list[i]
+
+	with transaction.atomic():
+		# It is safe to use atomic transaction here,
+		# because the changes which are saved to the rounds
+		# do not affect the .filter() condition
+		# and, moreover, each round is edited only once
+		for team in team_podium:
+			round_with_report = thispfrounds.filter(pf_number=round.pf_number, reporter_team=team)
+			if round_with_report.count() == 1:
+				# We suppose that one team can be a reporter once per PF
+				round_with_report = round_with_report[0]
+				if round_with_report.bonus_points_reporter != bonuspts[team] * params.fights['bonus_multipliers'][round.pf_number - 1]:
+					round_with_report.bonus_points_reporter = bonuspts[team] * params.fights['bonus_multipliers'][round.pf_number - 1]
+					round_with_report.save()
+
+
 def update_bonus_points():
 
 	# the rounds must be saved first !
 	rounds = Round.objects.all()
 
 	for round in rounds.filter(round_number=3):
-
-		bonuspts = {}
-		thispfrounds = Round.objects.filter(pf_number=round.pf_number).filter(room=round.room)
-		thispfteams = get_involved_teams_dict(thispfrounds).keys()
-
-		if thispfrounds.count() != len(thispfteams):
-			continue
-
-		# set the bonus points to zero
-		for team in thispfteams:
-			bonuspts[team] = 0.0
-
-		points_dict = {}
-		for team in thispfteams:
-			points_dict[team] = team.get_scores_for_rounds(rounds=thispfrounds, include_bonus=False)
-
-		# get teams sorted by total points for the physics fight
-		team_podium = sorted(thispfteams, key = lambda t : points_dict[t], reverse=True)
-		points_list = [points_dict[t] for t in team_podium]
-
-		bonus_list = distribute_bonus_points(points_list)
-
-		# TODO: rewrite in python-ish way
-		for i in range(len(points_list)):
-			bonuspts[team_podium[i]] = bonus_list[i]
-
-		with transaction.atomic():
-		# It is safe to use atomic transaction here,
-		# because the changes which are saved to the rounds
-		# do not affect the .filter() condition
-		#and, moreover, each round is edited only once
-			for team in team_podium:
-				round_with_report = thispfrounds.filter(pf_number=round.pf_number, reporter_team=team)
-				if round_with_report.count() == 1:
-					# We suppose that one team can be a reporter once per PF
-					round_with_report = round_with_report[0]
-					if round_with_report.bonus_points_reporter != bonuspts[team] * params.fights['bonus_multipliers'][round.pf_number-1]:
-						round_with_report.bonus_points_reporter = bonuspts[team] * params.fights['bonus_multipliers'][round.pf_number-1]
-						# TODO: get rid of save()
-						round_with_report.save()
+		update_bonus_points_for_round(round)
 
 
 def remove_phantom_grades():
