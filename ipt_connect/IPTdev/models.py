@@ -647,6 +647,8 @@ class Round(models.Model):
 
 		super(Round, self).save(*args, **kwargs)
 
+		update_bonus_points_for_round(self)
+
 	def ident(self):
 		return "%s%s%s" %(self.pf_number, self.round_number, self.room.ident())
 
