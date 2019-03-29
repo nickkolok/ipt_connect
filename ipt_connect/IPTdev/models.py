@@ -34,12 +34,6 @@ def ipt_mean(vec):
 	else:
 		nreject = round(len(vec) / 4.0)
 
-
-	# TODO: the following code looks messy, but it works.
-	# There was an unsuccessful attempt to refactor it.
-	# The code should be refactored and tested.
-	# At least the while loops should be removed if possible.
-
 	if round(nreject / 2.0) == nreject / 2.0:
 		nlow = int(nreject / 2.0)
 		nhigh = int(nlow)
