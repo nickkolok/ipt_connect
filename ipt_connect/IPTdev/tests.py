@@ -33,7 +33,7 @@ class  Test(TestCase):
         ]
         res_data = [
             2.5,
-            3.33333333333,
+            3.3333333333333335,
             1.0,
             3.0,
             6.0,
@@ -57,4 +57,4 @@ class  Test(TestCase):
             8.2
         ]
         for i in range(len(input_data)):
-            print (i, self.assertEqual(ipt_mean(input_data[i]), res_data[i]))
+            self.assertEqual(ipt_mean(input_data[i]), res_data[i])
