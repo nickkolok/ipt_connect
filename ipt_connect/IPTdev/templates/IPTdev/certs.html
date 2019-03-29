@@ -548,7 +548,7 @@
    <text:p text:style-name="P46"><text:span text:style-name="T1">{{ x.surname }}</text:span></text:p>
    <text:p text:style-name="P2">
     учени<text:span text:style-name="T4">{% if x.gender == "ж" %}ца{% else %}к{% endif %}</text:span>
-    <text:span text:style-name="T7">{{ x.school_class }}</text:span> класса
+    <text:span text:style-name="T7">{% firstof x.school_class "__" %}</text:span> класса
    </text:p>
    <text:p text:style-name="P34">{{ x.affiliation }}</text:p>
    <text:p text:style-name="P1">принял<text:span text:style-name="T4">{% if x.gender == "ж" %}а{% endif %}</text:span> участие в </text:p>
