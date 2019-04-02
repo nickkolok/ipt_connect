@@ -29,7 +29,7 @@ class  Test(TestCase):
             [5, 5, 6, 6, 7, 8, 8],
             [6, 7, 7, 7, 7, 8, 8],
             [6, 6, 7, 7, 7, 7],
-            [6, 7, 8, 8, 9, 9]
+            [6, 7, 8, 8, 9, 9],
         ]
         res_data = [
             2.5,
@@ -54,7 +54,7 @@ class  Test(TestCase):
             6.4,
             7.2,
             6.8,
-            8.2
+            8.2,
         ]
         for i in range(len(input_data)):
             self.assertEqual(ipt_mean(input_data[i]), res_data[i])
