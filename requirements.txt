@@ -3,3 +3,4 @@ Pillow>=4.0
 gunicorn
 lxml
 requests
+unicodecsv
