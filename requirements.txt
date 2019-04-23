@@ -4,3 +4,4 @@ gunicorn
 lxml
 requests
 unicodecsv
+django-solo-grappelli>=1.1.2
