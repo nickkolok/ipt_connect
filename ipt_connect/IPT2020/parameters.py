@@ -12,15 +12,15 @@ app_version = "IPT2020"[3:]     # keyword for url parsing
 
 
 NAME = {
-    'short': 'IPT 2019',
-    'full': 'International Physicists\' Tournament 2019',
+    'short': 'IPT 2020',
+    'full': 'International Physicists\' Tournament 2020',
     # ... and the name used in tournament overview
-    'front': '11th International Physicists\' Tournament',
+    'front': '12th International Physicists\' Tournament',
 }
 
-poster_url = 'https://habrastorage.org/webt/2_/yd/hb/2_ydhbu1gm4hmbs6fb1wwfg9ong.png'
+poster_url = ''
 
-website_url = 'http://2019.iptnet.info/'
+website_url = 'http://2020.iptnet.info/'
 
 repo_url = 'https://github.com/IPTnet/ipt_connect'
 
@@ -29,7 +29,7 @@ npf = 4                 # Number of selective (qualifying) Physics fights
 semifinals_quantity = 2 # Quantity of semifinals. Every semifinal should be a separate fight!
 with_final_pf = True    # Is there a Final Fight ?
 reject_malus = 0.2      # Malus for too many rejections
-npfreject_max = 3       # Maximum number of tactical rejection (per fight)
+npfreject_max = 4       # Maximum number of tactical rejection (per fight)
 netreject_max = 1       # Maximum number of eternal rejection
 
 # Should we reset the point sum before semifinals?
