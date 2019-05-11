@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from ipt_connect.views import home
 from IPTdev.views import tournament_overview
 from IPT2019.views import tournament_overview
+from IPT2020.views import tournament_overview
 
 urlpatterns = [
     # Examples:
@@ -17,6 +18,7 @@ urlpatterns = [
     url(r'^admin/', include('loginas.urls')),
     url(r'^IPTdev/', include('IPTdev.urls', namespace='IPTdev')),
     url(r'^IPT2019/', include('IPT2019.urls', namespace='IPT2019')),
+    url(r'^IPT2020/', include('IPT2020.urls', namespace='IPT2020')),
 ]
 
 
