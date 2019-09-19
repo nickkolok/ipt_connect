@@ -38,7 +38,7 @@ def ipt_mean(vec):
 	# TODO: the following code looks messy, but it works.
 	# There was an unsuccessful attempt to refactor it.
 	# The code should be refactored and tested.
-	# At least the while loops should be removed if possible.
+	
 
 	if round(nreject / 2.0) == nreject / 2.0:
 		nlow = int(nreject / 2.0)
@@ -47,15 +47,10 @@ def ipt_mean(vec):
 		nlow = int(nreject / 2.0 + 0.5)
 		nhigh = int(nreject / 2.0 - 0.5)
 
-	i = 0
-	while i < nhigh:
-		vec.pop(-1)
-		i += 1
-
-	i = 0
-	while i < nlow:
-		vec.pop(0)
-		i += 1
+	if nhigh == 0:
+		vec = vec[nlow:]
+	else:
+		vec = vec[nlow:-nhigh]
 
 	return float(sum(vec)) / len(vec)
 
