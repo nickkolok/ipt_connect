@@ -1,3 +1,5 @@
 Django>=1.9
 Pillow>=4.0
 gunicorn
+unicodecsv
+django-solo-grappelli>=1.1.2

@@ -1,6 +1,7 @@
 # coding: utf8
 from django.conf.urls import url
 from views import *
+from tactics import *
 from forms import member_for_team
 
 
@@ -18,19 +19,23 @@ urlpatterns = [
 	url(r'^problems/(?P<pk>[0-9]+)/$', problem_detail, name="problem_detail"),
 	url(r'^rounds$', rounds, name="rounds"),
 	url(r'^rounds/(?P<pk>[0-9]+)/$', round_detail, name="round_detail"),
-	url(r'^finalrounds/(?P<pk>[0-9]+)/$', finalround_detail, name="finalround_detail"),
 	url(r'^teams$', teams_overview, name="teams"),
 	url(r'^teams/(?P<team_name>[A-Za-z0-9\w|\W\- ]+)/$', team_detail, name='team_detail'),
-	url(r'^physics_fights$', physics_fights, name='physics_fights'),
+	url(r'^physics_fights$' , rounds, name="rounds"),
+	url(r'^physics_fights/$', rounds, name="rounds"),
 	url(r'^physics_fights/(?P<pfid>[0-9]+)/$', physics_fight_detail, name='physics_fight_detail'),
     url(r'^ranking$', ranking, name='ranking'),
+	url(r'^build_tactics$', build_tactics),
     url(r'^poolranking$', poolranking, name='poolranking'),
+    url(r'^export_csv_ranking_timeline$', export_csv_ranking_timeline),
     url(r'^participants_export$', participants_export),
 	url(r'^participants_export_web$', participants_export_web),
 	url(r'^participants_all$', participants_all),
 	url(r'^jury_export$', jury_export),
+	url(r'^jury_export_csv$', jury_export_csv),
 	url(r'^jury_export_web$', jury_export_web),
 	url(r'^trombinoscope$', participants_trombinoscope),
     url(r'^soon', soon),
     url(r'^update_all', update_all),
+	url(r'^upload_csv', upload_csv, name='upload_csv'),
 ]

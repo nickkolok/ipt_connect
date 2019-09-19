@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [u"XXX", u"127.0.0.1", u"localhost"]
 
 INSTALLED_APPS = (
     'grappelli',
+    'solo.apps.SoloAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'IPTdev',
+    'IPT_TTH2019POV',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -130,3 +132,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+SOLO_CACHE = 'default'
+SOLO_CACHE_TIMEOUT = 5*60

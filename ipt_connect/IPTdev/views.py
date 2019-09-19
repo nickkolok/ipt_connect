@@ -6,6 +6,8 @@ from models import *
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.translation import get_language
+from forms import UploadForm
+import csv
 import parameters as params
 
 
@@ -20,10 +22,8 @@ def home(request):
 cache_duration_short = 1 * 1
 cache_duration = 20 * 1
 
-ninja_mode = False
-
 def ninja_test(user):
-	return user.is_staff or not ninja_mode
+	return user.is_staff or not SiteConfiguration.get_solo().only_staff_access
 
 @cache_page(cache_duration_short)
 def soon(request):
@@ -49,6 +49,49 @@ def participants_export_web(request):
 
 	return render(request, 'IPT%s/listing_participants_web.html' % params.app_version, {'participants': participants, 'params': params})
 
+
+@user_passes_test(lambda u: u.is_staff)
+def export_csv_ranking_timeline(request):
+	import unicodecsv as csv
+	from django.http import HttpResponse
+
+	# Create the HttpResponse object with the appropriate CSV header.
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="ranking_timeline.csv"'
+
+	writer = csv.writer(response)
+
+	allteams = list(Team.objects.all())
+	writer.writerow([' ']+allteams)
+
+	previous_scores = {}
+	for team in allteams:
+		previous_scores[team] = 0
+
+	for pf_number in selective_fights_and_semifinals:
+		fight_rounds = Round.objects.filter(pf_number=pf_number)
+		for round_number in range(1,params.max_rounds_in_pf+1):
+			current_rounds = fight_rounds.filter(round_number=round_number)
+			for team in allteams:
+				previous_scores[team] += team.get_scores_for_rounds(rounds=current_rounds, include_bonus=False)[0]
+
+			writer.writerow(
+				[ '%s | Round %s' % (params.fights['names'][pf_number - 1], round_number) ] +
+				[ previous_scores[team] for team in allteams ]
+			)
+
+		for team in allteams:
+			previous_scores[team] += \
+				team.get_scores_for_rounds(rounds=fight_rounds,include_bonus=True)[0] -\
+				team.get_scores_for_rounds(rounds=fight_rounds,include_bonus=False)[0]
+		writer.writerow(
+			['%s | Bonuses' % params.fights['names'][pf_number - 1]] +
+			[previous_scores[team] for team in allteams]
+		)
+
+	return response
+
+
 @user_passes_test(lambda u: u.is_superuser)
 def jury_export(request):
 	jurys = Jury.objects.all().order_by('surname')
@@ -68,6 +111,34 @@ def update_all(request):
 	assert len(list_receivers) == 1, "len(list_receivers) is not 1 in view update_all"
 
 	return HttpResponse(list_receivers[0][1])
+
+
+@user_passes_test(lambda u: u.is_staff)
+def jury_export_csv(request):
+	import unicodecsv as csv
+	from django.http import HttpResponse
+
+	# Create the HttpResponse object with the appropriate CSV header.
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="jurors.csv"'
+
+	writer = csv.writer(response)
+
+	for juror in Jury.objects.all():
+		writer.writerow([
+			juror.pk,
+			juror.name,
+			juror.surname,
+			juror.affiliation,
+			juror.team,
+			# TODO: unhardcode PF number!
+			juror.pf1,
+			juror.pf2,
+			juror.pf3,
+			juror.pf4,
+		])
+
+	return response
 
 
 
@@ -155,33 +226,7 @@ def jury_detail(request, pk):
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
 def tournament_overview(request):
-	rounds = Round.objects.all()
-
-	teams = Team.objects.all()
-	teams = sorted(teams, key=lambda team: team.name)
-
-	rooms = Room.objects.all()
-	rooms = sorted(rooms, key=lambda room: room.name)
-
-	roomnumbers = [ind +1 for ind, room in enumerate(rooms)]
-	orderedroundsperroom=[]
-
-	for room in rooms:
-		thisroom = []
-
-		for pf in pfs:
-			thispf = []
-			myrounds = Round.objects.filter(pf_number=pf).filter(room=room)
-			myrounds = sorted(myrounds, key=lambda round: round.round_number)
-
-			for round in myrounds:
-				thispf.append(round)
-
-			thisroom.append(thispf)
-
-		orderedroundsperroom.append(thisroom)
-
-	return render(request, 'IPT%s/tournament_overview.html' % params.app_version, {'teams': teams, 'rounds': rounds, 'pfs': pfs, 'roomnumbers':roomnumbers, 'orderedroundsperroom': orderedroundsperroom, 'params': params})
+	return render(request, 'IPT%s/tournament_overview.html' % params.app_version, {'params': params})
 
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
@@ -211,12 +256,19 @@ def team_detail(request, team_name):
 
 	allrounds = []
 
+	bonus_points_displayed = 0.0
+
+	if params.manual_bonus_points:
+		bonus_points_displayed += team.bonus_points
+
 	for round in myreprounds:
 		# if len(JuryGrade.objects.filter(round=round)) > 0:
 		if round.score_reporter > 0.:
 			round.myrole = "reporter"
 			round.mygrade = round.score_reporter
 			allrounds.append(round)
+			bonus_points_displayed += round.bonus_points_reporter
+			# print team_name, round.pf_number, round.bonus_points_reporter
 	for round in myopprounds:
 		# if len(JuryGrade.objects.filter(round=round)) > 0:
 		if round.score_opponent > 0.:
@@ -237,7 +289,7 @@ def team_detail(request, team_name):
 		if p != 3.0:
 			penalties.append([ind+1, p])
 
-	return render(request, 'IPT%s/team_detail.html' % params.app_version, {'team': team, 'participants': rankedparticipants, 'teamleaders': teamleaders, 'allrounds': allrounds, 'penalties': penalties, 'params': params})
+	return render(request, 'IPT%s/team_detail.html' % params.app_version, {'team': team, 'participants': rankedparticipants, 'teamleaders': teamleaders, 'allrounds': allrounds, 'penalties': penalties, 'bonus_points_displayed': bonus_points_displayed, 'params': params})
 
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
@@ -269,16 +321,22 @@ def rounds(request):
 	orderedroundsperroom=[]
 	for room in rooms:
 		thisroom = []
-		for pf in pfs:
+		for pf in selective_fights:
 			thisroom.append(Round.objects.filter(pf_number=pf).filter(room=room).order_by('round_number'))
 		orderedroundsperroom.append(thisroom)
 
+	render_data = {
+		'params': params,
+		'orderedroundsperroom': orderedroundsperroom,
+		'selective_fight_names': zip(selective_fights,params.fights['names'][:params.npf]),
+	}
+
 	if params.with_final_pf :
-		myrounds = Round.objects.filter(pf_number=params.npf+1)
+		myrounds = Round.objects.filter(pf_number=final_fight_number)
 		finalrounds = sorted(myrounds, key=lambda round: round.round_number)
 		try:
 			finalteams = [finalrounds[0].reporter_team, finalrounds[0].opponent_team, finalrounds[0].reviewer_team]
-			finalpoints = [team.points(pfnumber=5, bonuspoints=False) for team in finalteams]
+			finalpoints = [team.points(pfnumber=final_fight_number, bonuspoints=False) for team in finalteams]
 		except:
 			finalteams = ["---", "---", "---"]
 			finalpoints = [0, 0, 0]
@@ -287,10 +345,24 @@ def rounds(request):
 		for team, point in zip(finalteams, finalpoints):
 			finalranking.append([team, point])
 
-		return render(request, 'IPT%s/rounds.html' % params.app_version, {'orderedroundsperroom': orderedroundsperroom, 'finalrounds': finalrounds, "finalranking": finalranking, 'params': params, 'pfs': pfs})
+		render_data.update({
+			'final_fight_number': final_fight_number,
+			'finalrounds': finalrounds,
+			'finalranking': finalranking,
+		})
 
-	else :
-		return render(request, 'IPT%s/rounds.html' % params.app_version, {'orderedroundsperroom': orderedroundsperroom, 'params': params, 'pfs': pfs})
+	if params.semifinals_quantity > 0:
+		semifinal_rounds = []
+		for pf in semifinals:
+			semifinal_rounds.append(Round.objects.filter(pf_number=pf).order_by('round_number'))
+		render_data.update({
+			'semifinal_data': zip(
+				params.fights['names'][params.npf:params.npf+params.semifinals_quantity],
+				semifinal_rounds
+			)
+		})
+
+	return render(request, 'IPT%s/rounds.html' % params.app_version, render_data)
 
 
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
@@ -318,45 +390,27 @@ def round_detail(request, pk):
 
 	tacticalrejections = TacticalRejection.objects.filter(round=round)
 	eternalrejection = EternalRejection.objects.filter(round=round)
+	tactical_rej_off = SiteConfiguration.get_solo().dont_display_tactical_rejects
+	
+	return render(
+		request,
+		'IPT%s/round_detail.html' % params.app_version,
+		{
+			'params': params,
+			'round': round,
+			'jurygrades': jurygrades,
+			'meangrades': meangrades,
+			'tacticalrejections': tacticalrejections,
+			'eternalrejection': eternalrejection,
+			'started': started,
+			'finished': finished,
+			'display_room_name': round.pf_number <= params.npf,
+			'display_rejections': params.fights['challenge_procedure'][round.pf_number - 1],
+			'display_problems_forbidden': params.fights['problems_forbidden'][round.pf_number - 1],
+			'physics_fight_name': params.fights['names'][round.pf_number - 1], 
+			'tactical_rej_off': tactical_rej_off,
+		})
 
-	return render(request, 'IPT%s/round_detail.html' % params.app_version, {'round': round, 'jurygrades': jurygrades, 'meangrades': meangrades, "tacticalrejections": tacticalrejections, "eternalrejection": eternalrejection, "started": started, "finished": finished, 'params': params})
-
-@user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
-@cache_page(cache_duration)
-def finalround_detail(request, pk):
-	round = Round.objects.get(pk=pk)
-	jurygrades = JuryGrade.objects.filter(round=round).order_by('jury__name')
-	meangrades = []
-
-	# has the round started ? If so, then reporter_team, opponent_team and reviewer_team must be defined
-	if None in [round.reporter_team, round.opponent_team, round.reviewer_team]:
-		started = False
-	else:
-		started = True
-
-	# participants mean grades. If the fight is finished, then at least some jurygrades must exists
-	if len(jurygrades) != 0:
-		meangrades.append(round.score_reporter)
-		meangrades.append(round.score_opponent)
-		meangrades.append(round.score_reviewer)
-		finished = True
-	else:
-		finished = False
-
-	tacticalrejections = TacticalRejection.objects.filter(round=round)
-	eternalrejection = EternalRejection.objects.filter(round=round)
-
-	return render(request, 'IPT%s/finalround_detail.html' % params.app_version, {'round': round, 'jurygrades': jurygrades, 'meangrades': meangrades, "tacticalrejections": tacticalrejections, "eternalrejection": eternalrejection, "started": started, "finished": finished, 'params': params})
-
-@user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
-@cache_page(cache_duration)
-def physics_fights(request):
-	rounds = Round.objects.all()
-	pf1 = rounds.filter(pf_number=1)
-	pf2 = rounds.filter(pf_number=2)
-	pf3 = rounds.filter(pf_number=3)
-	# TODO: there are more than 3 PFs! Is this function still working and necessary?
-	return render(request, 'IPT%s/physics_fights.html' % params.app_version, {'pf1': pf1, 'pf2': pf2, 'pf3': pf3})
 
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
@@ -366,8 +420,8 @@ def physics_fight_detail(request, pfid):
 
 	roomgrades = []
 	for room in rooms:
-		roomrounds = rounds.filter(room=room)
-		finished = False
+		roomrounds = rounds.filter(room=room).order_by('round_number')
+
 		grades = JuryGrade.objects.filter(round__room=room, round__pf_number=pfid).order_by('round__round_number', 'jury__surname')
 		gradesdico = {}
 		for grade in grades:
@@ -380,128 +434,226 @@ def physics_fight_detail(request, pfid):
 
 		# meangrades and summary grades
 		meanroundsgrades = []
-		summary_grades = {round.reporter.team.name: [round.reporter.team.presentation_coefficients()[int(pfid) - 1]] for round in roomrounds}
+
 		for round in roomrounds:
 			meangrades = []
-			try:
-				meangrades.append(round.score_reporter)
-				meangrades.append(round.score_opponent)
-				meangrades.append(round.score_reviewer)
-				summary_grades[round.reporter.team.name] += [round.score_reporter * summary_grades[round.reporter.team.name][0]]
-				summary_grades[round.opponent.team.name] += [round.score_opponent * 2.0]
-				summary_grades[round.reviewer.team.name] += [round.score_reviewer]
-			except:
-				pass
+			meangrades.append(round.score_reporter)
+			meangrades.append(round.score_opponent)
+			meangrades.append(round.score_reviewer)
 			meanroundsgrades.append(meangrades)
 
-		try:
-			for team in summary_grades:
-				summary_grades[team].append(sum(summary_grades[team][1:]))
-			summary_grades = sorted(summary_grades.items(), key=lambda x: x[1][4], reverse=True)
-		except:
-			summary_grades = []
+		teams_involved = get_involved_teams_dict(roomrounds)
+		finished = (roomrounds.count() == len(teams_involved))
 
-		# TODO: make it work for any quantity of rounds
-		if roomrounds.count() != 3:
-			summary_grades = []
+		if params.display_pf_summary:
+			try:
+				summary_grades = {team: [team.presentation_coefficients()[int(pfid) - 1]] for team in teams_involved}
+				for team in teams_involved:
+					for r in roomrounds:
+						summary_grades[team].append(
+							# TODO: looks like this is not the fastest way!
+							team.get_scores_for_rounds(rounds=roomrounds.filter(round_number=r.round_number), include_bonus=False)[0]
+						)
+					summary_grades[team].append(sum(summary_grades[team][1:]))
+
+				summary_grades = sorted(summary_grades.items(), key=lambda x: x[1][-1], reverse=True)
+
+				if finished and params.display_pf_summary_bonus_points:
+					for team_summary in summary_grades:
+						reporter_round = roomrounds.filter(reporter_team=team_summary[0])[0]
+						team_summary[1].append(reporter_round.bonus_points_reporter)
+			except:
+				summary_grades = None
+		else:
+			summary_grades = None
+
 
 		infos = {"pf": pfid, "room": room.name, "finished": finished}
 		roundsgrades = [juryallgrades, meanroundsgrades, infos, summary_grades]
 		roomgrades.append(roundsgrades)
 
-	return render(request, 'IPT%s/physics_fight_detail.html' % params.app_version, {"roomgrades": roomgrades, 'params': params})
+	return render(request, 'IPT%s/physics_fight_detail.html' % params.app_version, {
+		'params': params,
+		'roomgrades': roomgrades,
+		'ignore_rooms': int(pfid) > params.npf,
+		'fight_name': params.fights['names'][int(pfid) - 1],
+		'no_round_played': rounds.count() == 0,
+	})
+
+
+def rank_ordinal(value):
+    try:
+        value = int(value)
+    except ValueError:
+        return value
+    lang = get_language()
+    if lang == 'ru':
+        t = ('-ый', '-ый', '-ой', '-ий', '-ый', '-ый', '-ой', '-ой', '-ой', '-ый')
+        if not value:
+            return "0-ой"
+        if value in range(10, 20):
+            return "%d-ый" % (value)
+        return '%d%s' % (value, t[value % 10])
+    else:
+        t = ('th', 'st', 'nd', 'rd') + ('th',) * 6
+        if value % 100 in (11, 12, 13):
+            return u"%d%s" % (value, t[0])
+        return u'%d%s' % (value, t[value % 10])
+
+def create_ranking(teams):
+    rankteams = []
+
+    if len(teams) > 0:
+
+        for ind, team in enumerate(teams):
+            nrounds_as_rep = team.nrounds_as_rep
+            nrounds_as_opp = team.nrounds_as_opp
+            nrounds_as_rev = team.nrounds_as_rev
+            pfsplayed = min(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev)
+            team.pfsplayed = pfsplayed
+            team.ongoingpf = False
+            if max(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev) > pfsplayed:
+                team.ongoingpf = True
+                team.currentpf = pfsplayed + 1
+            team.rank = rank_ordinal(ind + 1)
+            rankteams.append(team)
+
+    return rankteams
+
+
+def create_final_ranking():
+	teams = Team.objects.filter(is_in_final=True).order_by('-final_points')
+	if teams.count() == 0:
+		return None
+
+	return create_ranking(teams)
+
+
+def create_semi_ranking():
+	teams = Team.objects.filter(is_in_semi=True).order_by('-semi_points')
+	if teams.count() == 0:
+		return None
+
+	return create_ranking(teams)
+
 
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
 def ranking(request):
-	rankteams = []
-	ranking = Team.objects.order_by('-total_points')
+	rankteams = create_ranking(Team.objects.order_by('-total_points'))
+	rankteams[0].emphase = True
 
-	# if len(teams) > 0 :
-	if len(ranking) > 0:
+	semirankteams = create_semi_ranking()
 
-		for ind, team in enumerate(ranking):
-			nrounds_as_rep = team.nrounds_as_rep # Round.objects.filter(reporter_team=team)
-			nrounds_as_opp = team.nrounds_as_opp # Round.objects.filter(opponent_team=team)
-			nrounds_as_rev = team.nrounds_as_rev # Round.objects.filter(reviewer_team=team)
-			pfsplayed = min(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev)
-			team.pfsplayed = pfsplayed
-			team.ongoingpf = False
-			if max(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev) > pfsplayed:
-				team.ongoingpf = True
-				team.currentpf = pfsplayed+1
-			team.rank = ind+1
-			if team.rank == 1:
-				team.emphase=True
-			rankteams.append(team)
+	if SiteConfiguration.get_solo().display_final_ranking_on_ranking_page :
+		finalrankteams = create_final_ranking()
+	else:
+		finalrankteams = None
 
-	return render(request, 'IPT%s/ranking.html' % params.app_version, {'rankteams': rankteams, 'params': params})
+	return render(request, 'IPT%s/ranking.html' % params.app_version, {
+		'params': params,
+		'final_fight_number': final_fight_number,
+		'finalrankteams': finalrankteams,
+		'rankteams': rankteams,
+		'semirankteams': semirankteams,
+	})
 
 @user_passes_test(ninja_test, redirect_field_name=None, login_url='/IPT%s/soon' % params.app_version)
 @cache_page(cache_duration)
 def poolranking(request):
 
-	def rank_ordinal(value):
-		try:
-			value = int(value)
-		except ValueError:
-			return value
-		lang = get_language()
-		if lang == 'ru':
-			t = ('-ый', '-ый', '-ой', '-ий', '-ый', '-ый', '-ой', '-ой', '-ой', '-ый')
-			if not value:
-				return "0-ой"
-			if value in range(10, 20):
-				return "%d-ый" % (value)
-			return '%d%s' % (value, t[value % 10])
-		else:
-			t = ('th', 'st', 'nd', 'rd') + ('th',) * 6
-			if value % 100 in (11, 12, 13):
-				return u"%d%s" % (value, t[0])
-			return u'%d%s' % (value, t[value % 10])
-
 	# Pool A
-	rankteamsA = []
-	ranking = Team.objects.filter(pool="A").order_by('-total_points')
-
-	# if len(teams) > 0 :
-	if len(ranking) > 0:
-
-		for ind, team in enumerate(ranking):
-			nrounds_as_rep = team.nrounds_as_rep # Round.objects.filter(reporter_team=team)
-			nrounds_as_opp = team.nrounds_as_opp # Round.objects.filter(opponent_team=team)
-			nrounds_as_rev = team.nrounds_as_rev # Round.objects.filter(reviewer_team=team)
-			pfsplayed = min(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev)
-			team.pfsplayed = pfsplayed
-			team.ongoingpf = False
-			if max(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev) > pfsplayed:
-				team.ongoingpf = True
-				team.currentpf = pfsplayed+1
-			team.rank = rank_ordinal(ind+1)
-			if team.rank == 1:
-				team.emphase=True
-			rankteamsA.append(team)
+	rankteamsA = create_ranking(Team.objects.filter(pool="A").order_by('-total_points'))
 
 	# Pool B
-	rankteamsB = []
-	ranking = Team.objects.filter(pool="B").order_by('-total_points')
+	rankteamsB = create_ranking(Team.objects.filter(pool="B").order_by('-total_points'))
 
-	# if len(teams) > 0 :
-	if len(ranking) > 0:
+	semirankteams = create_semi_ranking()
 
-		for ind, team in enumerate(ranking):
-			nrounds_as_rep = team.nrounds_as_rep # Round.objects.filter(reporter_team=team)
-			nrounds_as_opp = team.nrounds_as_opp # Round.objects.filter(opponent_team=team)
-			nrounds_as_rev = team.nrounds_as_rev # Round.objects.filter(reviewer_team=team)
-			pfsplayed = min(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev)
-			team.pfsplayed = pfsplayed
-			team.ongoingpf = False
-			if max(nrounds_as_rep, nrounds_as_opp, nrounds_as_rev) > pfsplayed:
-				team.ongoingpf = True
-				team.currentpf = pfsplayed+1
-			team.rank = rank_ordinal(ind+1)
-			if team.rank == 1:
-				team.emphase=True
-			rankteamsB.append(team)
+	if SiteConfiguration.get_solo().display_final_ranking_on_ranking_page :
+		finalrankteams = create_final_ranking()
+	else:
+		finalrankteams = None
 
-	return render(request, 'IPT%s/poolranking.html' % params.app_version, {'rankteamsA': rankteamsA, 'rankteamsB': rankteamsB, 'params': params})
+	return render(request, 'IPT%s/poolranking.html' % params.app_version, {
+		'params': params,
+		'final_fight_number': final_fight_number,
+		'finalrankteams': finalrankteams,
+		'rankteamsA': rankteamsA,
+		'rankteamsB': rankteamsB,
+		'semirankteams': semirankteams,
+	})
+
+
+def make_dict_from_csv_row(row):
+	# This is just a map to control numbers of columns which are imported
+	# No logic should be placed here!
+	return {
+		'name': row[1],
+		'surname': row[3],
+		'affiliation': row[4],
+		'team': row[9],
+		'role': row[10],
+		'is_jury': row[11],
+		'email': row[19],
+	}
+
+
+def make_row_importable(row):
+	# All the logic needed to parse the row
+	# Some edition-specific things are hardcoded here
+
+	if row['team'] == 'Organisational Registration (IOC, ExeCom, invited guest, etc.)':
+		# No team reference needed
+		row['team'] = None
+	else:
+		# This also holds automated creation of teams
+		row['team'], created = Team.objects.get_or_create(
+			name=row['team']
+		)
+
+	row['is_jury'] = (row['is_jury'] != '0')
+
+	if row['role'] == 'Team captain':
+		row['role'] = 'TC'
+	elif row['role'] == 'Team member':
+		row['role'] = 'TM'
+	else:
+		row['role'] = None
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/admin')
+@cache_page(cache_duration)
+def upload_csv(request):
+	if request.method == 'POST':
+		form = UploadForm(request.POST, request.FILES)
+		if form.is_valid():
+			csvfile = request.FILES['csvfile']
+			reader = csv.reader(csvfile)
+			next(reader)
+			for row in reader:
+				row = make_dict_from_csv_row(row)
+				make_row_importable(row)
+				print row
+
+				# If a person is not a jury member and has a role,
+				# import him/her as a participant
+				if not row['is_jury'] and row['role']:
+					Participant.objects.get_or_create(
+						name=row['name'],
+						surname=row['surname'],
+						affiliation=row['affiliation'],
+						role=row['role'],
+						team=row['team'],
+					)
+				elif row['is_jury']:
+					Jury.objects.get_or_create(
+						name=row['name'],
+						surname=row['surname'],
+						affiliation=row['affiliation'],
+						team=row['team'],
+					)
+	else:
+		form = UploadForm()
+
+	return render(request, 'IPT%s/upload_csv.html' % params.app_version, {'form': form, 'params': params})

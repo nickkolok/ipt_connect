@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 import os, sys
+import time
 from uuid import uuid4
 from django.utils.encoding import iri_to_uri
 from string import replace
@@ -12,12 +13,18 @@ from django.dispatch import receiver
 from django.db.models import Avg, Sum
 from django.core.validators import RegexValidator
 from django.dispatch import Signal
+from django.db import transaction
+from solo.models import SingletonModel
+
 import parameters as params
 
 
 # Useful static variables
-pfs = [i+1 for i in range(params.npf)]
-npf_tot = params.npf + int(params.with_final_pf)
+selective_fights = [i+1 for i in range(params.npf)]
+selective_fights_and_semifinals = [i+1 for i in range(params.npf + params.semifinals_quantity)]
+semifinals = [i+1 for i in range(params.npf, params.npf + params.semifinals_quantity)]
+npf_tot = params.npf + params.semifinals_quantity + int(params.with_final_pf)
+final_fight_number = params.npf + params.semifinals_quantity + 1
 grade_choices = [(ind, ind) for ind in range(10+1)]
 
 def mean(vec):
@@ -64,8 +71,75 @@ def iypt_mean(vec):
 	vec.append((vec.pop(0) + vec.pop()) / 2.0)
 	return float(sum(vec)) / len(vec)
 
+def ttn_mean(vec):
+    if len(vec) <= 4:
+        return mean(vec)
+    return iypt_mean(vec)
+
 def special_mean(vec):
 	return globals()[params.mean](vec)
+
+
+def distribute_bonus_points(points_list):
+	if len(points_list) == 3:
+		return distribute_bonus_points_3(points_list)
+	if len(points_list) == 4:
+		return distribute_bonus_points_4(points_list)
+	return [2.0, 1.0, 1.0, 0.0, 0.0]
+
+def distribute_bonus_points_3(points_list):
+
+	# If everyone is ex-aequo
+	if points_list[0] == points_list[1] and points_list[0] == points_list[2]:
+		return [1.0, 1.0, 1.0]
+
+	# If 1 and 2 are ex-aequo
+	if points_list[0] == points_list[1]:
+		return [1.5, 1.5, 0.0]
+
+	# If 2 and 3 are ex-aequo
+	if points_list[1] == points_list[2]:
+		return [2.0, 0.5, 0.5]
+
+	# If no ex-aequo
+	return [2.0, 1.0, 0.0]
+
+
+def distribute_bonus_points_4(points_list):
+
+	######################
+	# 4 teams ex-aequo
+	# If everyone is ex-aequo
+	if points_list[0] == points_list[1] and points_list[1] == points_list[2] and points_list[2] == points_list[3]:
+		return [1.0, 1.0, 1.0, 1.0]
+	######################
+
+	######################
+	# 3 teams ex-aequo
+	if points_list[0] == points_list[1] and points_list[1] == points_list[2]:
+		return [4.0/3.0, 4.0/3.0, 4.0/3.0, 0.0]
+	if points_list[0] == points_list[1] and points_list[0] == points_list[2]:
+		return [2.0, 1.0/3.0, 1.0/3.0, 1.0/3.0]
+	######################
+
+	######################
+	# 2 pairs of teams ex-aequo
+	if points_list[0] == points_list[1] and points_list[2] == points_list[3]:
+		return [1.5, 1.5, 0.5, 0.5]
+	######################
+
+	######################
+	# One pair of teams ex-aequo
+	if points_list[0] == points_list[1]:
+		return [1.5, 1.5, 1.0, 0.0]
+	if points_list[1] == points_list[2]:
+		return [2.0, 1.0, 1.0, 0.0]  # Redundant, but let it be
+	if points_list[2] == points_list[3]:
+		return [2.0, 1.0, 0.5, 0.5]
+	######################
+
+	# No ex-aequo
+	return [2.0, 1.0, 1.0, 0.0]
 
 
 @deconstructible
@@ -199,7 +273,7 @@ class Problem(models.Model):
 	This model represents one of the 17 problems
 	"""
 	name = models.CharField(max_length=50, default=None)
-	description = models.TextField(max_length=700, default=None)
+	description = models.TextField(max_length=4096, default=None)
 
 	mean_score_of_reporters = models.FloatField(default=0.0, editable=False)
 	mean_score_of_opponents = models.FloatField(default=0.0, editable=False)
@@ -296,6 +370,10 @@ class Team(models.Model):
 	pool = models.CharField(max_length=1,choices=POOL_CHOICES,verbose_name='Pool', null=True, blank=True)
 
 	total_points = models.FloatField(default=0.0, editable=False)
+	semi_points = models.FloatField(default=0.0, editable=False)
+	final_points = models.FloatField(default=0.0, editable=False)
+	is_in_semi = models.BooleanField(default=False, editable=True)
+	is_in_final = models.BooleanField(default=False, editable=True)
 	bonus_points = models.FloatField(default=0.0, editable=params.manual_bonus_points)
 	nrounds_as_rep = models.IntegerField(default=0, editable=False)
 	nrounds_as_opp = models.IntegerField(default=0, editable=False)
@@ -319,7 +397,7 @@ class Team(models.Model):
 
 		beforetactical = []
 		netrej = 0
-		for pf in pfs:
+		for pf in selective_fights_and_semifinals:
 			netrej += len(eternalrejections.filter(round__pf_number=pf))
 			beforetactical.append(3.0 - params.reject_malus*max(0, (netrej-params.netreject_max)))
 
@@ -330,7 +408,7 @@ class Team(models.Model):
 		npenalities = 0
 		if verbose:
 			print "="*20, "Tactical Rejection Penalites for Team %s" % self.name, "="*20
-		for ind, pf in enumerate(pfs):
+		for ind, pf in enumerate(selective_fights_and_semifinals):
 			pfrejections = [rejection for rejection in rejections if rejection.round.pf_number == pf]
 			if verbose:
 				print "%i tactical rejections by Team %s in Physics Fight %i" % (len(pfrejections), self, pf)
@@ -350,20 +428,11 @@ class Team(models.Model):
 		return prescoeffs
 
 
-	def update_scores(self):
-		#print "Updating scores for", self
+	def get_scores_for_rounds(self, rounds, include_bonus=True):
 
-		# TODO: unhardcode number of rounds!
-		qfrounds = Round.objects.filter(pf_number=1) | Round.objects.filter(pf_number=2) | Round.objects.filter(pf_number=3) | Round.objects.filter(pf_number=4)
-
-
-		rounds_as_reporter = Round.objects.filter(reporter_team=self)
-		rounds_as_opponent = Round.objects.filter(opponent_team=self)
-		rounds_as_reviewer = Round.objects.filter(reviewer_team=self)
-
-		self.nrounds_as_rep = len(rounds_as_reporter)
-		self.nrounds_as_opp = len(rounds_as_opponent)
-		self.nrounds_as_rev = len(rounds_as_reviewer)
+		rounds_as_reporter = rounds.filter(reporter_team=self)
+		rounds_as_opponent = rounds.filter(opponent_team=self)
+		rounds_as_reviewer = rounds.filter(reviewer_team=self)
 
 		res = 0.0
 
@@ -371,7 +440,44 @@ class Team(models.Model):
 		res += sum([round.points_opponent for round in rounds_as_opponent])
 		res += sum([round.points_reviewer for round in rounds_as_reviewer])
 
-		self.total_points = res
+		if include_bonus:
+			# Bonus points for winning the fight are stored in a round
+			# at which the appropriate team was the reporter
+			res += sum([round.bonus_points_reporter for round in rounds_as_reporter])
+
+		return (
+			res,
+			len(rounds_as_reporter),
+			len(rounds_as_opponent),
+			len(rounds_as_reviewer),
+		)
+
+
+	def update_scores(self):
+		#print "Updating scores for", self
+
+		qfrounds = Round.objects.filter(pf_number__range=(1,params.npf))
+		qfscores = self.get_scores_for_rounds(qfrounds)
+
+		self.total_points   = qfscores[0]
+		self.nrounds_as_rep = qfscores[1]
+		self.nrounds_as_opp = qfscores[2]
+		self.nrounds_as_rev = qfscores[3]
+
+		if params.manual_bonus_points:
+			self.total_points += self.bonus_points
+
+		if self.is_in_semi:
+			semirounds = Round.objects.filter(pf_number__range=(params.npf + 1, params.npf + params.semifinals_quantity))
+			self.semi_points = self.get_scores_for_rounds(semirounds)[0]
+			if not params.reset_points_before_semi:
+				self.semi_points += self.total_points
+
+		if self.is_in_final:
+			finalrounds = Round.objects.filter(pf_number=final_fight_number)
+			self.final_points = self.get_scores_for_rounds(finalrounds)[0]
+			if not params.reset_points_before_final:
+				self.final_points += self.total_points
 
 		self.save()
 
@@ -405,7 +511,7 @@ class Team(models.Model):
 		if currentround !=None:
 			pf_number = currentround.pf_number
 		else: #TODO: remove these stupid 999 values and implement the pf rejection properly
-			round_number = 999
+			pf_number = 999
 
 		# the eternal rejection
 		eternal_rejections = EternalRejection.objects.filter(round__reporter__team=self)
@@ -488,7 +594,7 @@ class Jury(models.Model):
 class Round(models.Model):
 
 	pf_number = models.IntegerField(
-			choices=(((ind+1, 'Fight '+str(ind+1)) for ind in range(npf_tot))),
+			choices=(((ind+1, params.fights['names'][ind]) for ind in range(npf_tot))),
 			default=None
 			)
 	round_number = models.IntegerField(
@@ -514,8 +620,16 @@ class Round(models.Model):
 	points_opponent = models.FloatField(default=0.0, editable=False)
 	points_reviewer = models.FloatField(default=0.0, editable=False)
 
+	# Bonus points for the reporters team are stored in the Round
+	# at which the team was reporting
+	bonus_points_reporter = models.FloatField(default=0.0, editable=params.manual_bonus_points)
+
 	def __unicode__(self):
-		return "Fight %i | Round %i | Salle %s" % (self.pf_number, self.round_number, self.room.name)
+
+		return \
+			params.fights['names'][self.pf_number - 1] +\
+			" | Round %i" % self.round_number +\
+			(" | Room " + self.room.name if self.pf_number <= params.npf else "")
 
 	def save(self, *args, **kwargs):
 		jurygrades = JuryGrade.objects.filter(round=self)
@@ -670,80 +784,78 @@ def update_points(sender, instance, **kwargs):
 		# and the problem mean scores
 		instance.problem_presented.update_scores()
 
+class SiteConfiguration(SingletonModel):
+    only_staff_access = models.BooleanField(default=False)
+    display_link_to_final_on_ranking_page = models.BooleanField(default=False)
+    display_final_ranking_on_ranking_page = models.BooleanField(default=False)
+    dont_display_tactical_rejects = models.BooleanField(default=False)
+    def __unicode__(self):
+        return u"Site Configuration"
 
-def bonuspoints():
+    class Meta:
+        verbose_name = "Site Configuration"
+
+def get_involved_teams_dict(round_list):
+	teams_dict = {}
+	for r in round_list:
+		teams_dict[r.reporter_team] = {}
+		teams_dict[r.opponent_team] = {}
+		teams_dict[r.reviewer_team] = {}
+	return teams_dict
+
+
+def update_bonus_points():
 
 	# the rounds must be saved first !
-	# TODO: unhardcode PF quantity...
-	rounds = Round.objects.filter(pf_number=1) | Round.objects.filter(pf_number=2) | Round.objects.filter(pf_number=3) | Round.objects.filter(pf_number=4)
-	allteams = Team.objects.all()
-
-	bonuspts = {}
-	# set the bonus points to zero
-	for team in allteams:
-		bonuspts[team] = 0.0
+	rounds = Round.objects.all()
 
 	for round in rounds.filter(round_number=3):
-		thispfteams = [round.reporter_team, round.opponent_team, round.reviewer_team]
-		thispfrounds = Round.objects.filter(pf_number=round.pf_number).filter(room=round.room).order_by('round_number')
 
-		# get the points of the physics fight for the 3 teams (without bonuses) in a dictionary
+		bonuspts = {}
+		thispfrounds = Round.objects.filter(pf_number=round.pf_number).filter(room=round.room)
+		thispfteams = get_involved_teams_dict(thispfrounds).keys()
+
+		if thispfrounds.count() != len(thispfteams):
+			continue
+
+		# set the bonus points to zero
+		for team in thispfteams:
+			bonuspts[team] = 0.0
+
 		points_dict = {}
 		for team in thispfteams:
-			points_dict[team] = 0.0
-		for pfround in thispfrounds :
-			# add the points of each round
-			points_dict[pfround.reporter_team] += pfround.points_reporter
-			points_dict[pfround.opponent_team] += pfround.points_opponent
-			points_dict[pfround.reviewer_team] += pfround.points_reviewer
+			points_dict[team] = team.get_scores_for_rounds(rounds=thispfrounds, include_bonus=False)
 
 		# get teams sorted by total points for the physics fight
 		team_podium = sorted(thispfteams, key = lambda t : points_dict[t], reverse=True)
 		points_list = [points_dict[t] for t in team_podium]
 
-		# If everyone is ex-aequo
-		if points_list[0] == points_list[1] and points_list[0] == points_list[2] :
-			team_podium[0].bonus_points = 1.
-			team_podium[1].bonus_points = 1.
-			team_podium[2].bonus_points = 1.
-		# If 1 and 2 are ex-aequo
-		elif points_list[0] == points_list[1]:
-			team_podium[0].bonus_points = 1.5
-			team_podium[1].bonus_points = 1.5
-			team_podium[2].bonus_points = 0.0
-		# If 2 and 3 are ex-aequo
-		elif points_list[1] == points_list[2]:
-			team_podium[0].bonus_points = 2.0
-			team_podium[1].bonus_points = 0.5
-			team_podium[2].bonus_points = 0.5
-		# If no ex-aequo
-		else:
-			team_podium[0].bonus_points = 2.0
-			team_podium[1].bonus_points = 1.0
-			team_podium[2].bonus_points = 0.0
+		bonus_list = distribute_bonus_points(points_list)
 
-		sumbonuspts = 0
-		for team in team_podium:
-			bonuspts[team] += team.bonus_points
-			sumbonuspts += team.bonus_points
-		assert sumbonuspts == 3.0, sumbonuspts
+		# TODO: rewrite in python-ish way
+		for i in range(len(points_list)):
+			bonuspts[team_podium[i]] = bonus_list[i]
 
-	return bonuspts
+		with transaction.atomic():
+		# It is safe to use atomic transaction here,
+		# because the changes which are saved to the rounds
+		# do not affect the .filter() condition
+		#and, moreover, each round is edited only once
+			for team in team_podium:
+				round_with_report = thispfrounds.filter(pf_number=round.pf_number, reporter_team=team)
+				if round_with_report.count() == 1:
+					# We suppose that one team can be a reporter once per PF
+					round_with_report = round_with_report[0]
+					if round_with_report.bonus_points_reporter != bonuspts[team] * params.fights['bonus_multipliers'][round.pf_number-1]:
+						round_with_report.bonus_points_reporter = bonuspts[team] * params.fights['bonus_multipliers'][round.pf_number-1]
+						# TODO: get rid of save()
+						round_with_report.save()
 
 
-update_signal = Signal()
-@receiver(update_signal, sender=Round, dispatch_uid="update_all")
-def update_all(sender, **kwargs):
+def remove_phantom_grades():
 
-	# TODO: unhardcode PF quantity! Semifinals (if any) and the Final (if any) should be mentioned too!
-	allrounds = Round.objects.filter(pf_number=1) | Round.objects.filter(pf_number=2) | Round.objects.filter(pf_number=3) | Round.objects.filter(pf_number=4)
-	allrounds = sorted(allrounds,key=lambda round : round.round_number, reverse=False)
-
-
+	allrounds = Round.objects.all()
 	allgrades = JuryGrade.objects.all()
-	allteams = Team.objects.all()
-
-
 
 	# remove the phantom grades, if any
 	rgrades = []
@@ -752,48 +864,53 @@ def update_all(sender, **kwargs):
 		for grade in mygrades:
 			rgrades.append(grade)
 
-
 	i = 0
 	for grade in allgrades:
 		if grade not in rgrades:
-			i+=1
+			i += 1
 			grade.delete()
 	print "I removed %i phantom grades..." % i
 
 
+update_signal = Signal()
+@receiver(update_signal, sender=Round, dispatch_uid="update_all")
+def update_all(sender, **kwargs):
+
+	old_time = time.time()
+
+	remove_phantom_grades()
 
 	if not params.manual_bonus_points :
-		# reset the bonus points to zero
+		print "Updating bonus points..."
+		update_bonus_points()
+		print "Done!"
+
+	# The query must be refreshed: update_bonus_points() changed rounds and saved them
+	allrounds = Round.objects.all()
+	allrounds = sorted(allrounds,key=lambda round : round.round_number, reverse=False)
+	allteams = Team.objects.all()
+
+
+	#if 1:
+	with transaction.atomic():
+		# update rounds
+		for round in allrounds:
+			# we do not want to add the bonus points now, let's keep that for a next step (just to check, that might disappear later)
+			update_points(sender, instance=round)
+			round.save()
+			#sys.exit()
+
+		print "="*15
 		for team in allteams:
-			team.bonus_points = 0.0
+			#print "----"
+			print team.name, team.total_points
+			team.save()
 
 
-	# update rounds
-	for round in allrounds:
-		# we do not want to add the bonus points now, let's keep that for a next step (just to check, that might disappear later)
-		update_points(sender, instance=round)
-		round.save()
-		#sys.exit()
-
-	if not params.manual_bonus_points :
-		# add the bonus points
-		bonuspts = bonuspoints()
-	print "="*15
-	for team in allteams:
-		#print "----"
-		#print team.name, team.total_points, bonuspts[team]
-		if not params.manual_bonus_points :
-			team.bonus_points = bonuspts[team]
-
-		team.total_points += team.bonus_points
-
-		team.save()
-		#print team.total_points
+		# just in case, update the problems
+		for pb in Problem.objects.all():
+			pb.update_scores()
 
 
-	# just in case, update the problems
-	for pb in Problem.objects.all():
-		pb.update_scores()
-
-	return "Teams, participants and problems updated !"
+	return "Teams, participants and problems updated in " , int(time.time()-old_time) ,  " seconds !"
 

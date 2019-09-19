@@ -6,6 +6,20 @@ from django import forms
 from django.forms import widgets
 import parameters as params
 
+from solo.admin import SingletonModelAdmin
+#from config.models import SiteConfiguration
+
+admin.site.register(SiteConfiguration, SingletonModelAdmin)
+
+# There is only one item in the table, you can get it this way:
+from .models import SiteConfiguration
+# config = SiteConfiguration.objects.get()
+
+try:
+    # get_solo will create the item if it does not already exist
+    config = SiteConfiguration.get_solo()
+except:
+    pass
 
 class JuryGradeInline(admin.TabularInline):
 	model = JuryGrade
@@ -34,7 +48,9 @@ class Roundadmin(admin.ModelAdmin):
 		("reporter_2"),
 		('opponent'),
 		('reviewer'),
-		'problem_presented'
+		# ('problem_presented'),
+		# TODO: do the same in python-ish way
+		('problem_presented',"bonus_points_reporter") if params.manual_bonus_points else ('problem_presented'),
 	]})
 	]
 	inlines = [TacticalRejectionInline, EternalRejectionInline, JuryGradeInline]
@@ -47,6 +63,8 @@ class Roundadmin(admin.ModelAdmin):
 		pass  # don't actually save the parent instance
 
 	def save_related(self, request, form, formsets, change):
+		# First save iteration to prevent errors
+		form.instance.save()
 		# first save the inlines
 		for formset in formsets:
 			self.save_formset(request, form, formset, change=change)
