@@ -15,8 +15,14 @@ NAME = {
 # Usually you should set it to None
 # This is useful only for development and first stages of Three Science Tournament
 sister_tournaments = (
-	('IPT dev','/IPT'+'dev/'),
-	('IPT dev (pf2)','/IPT'+'dev_pf2/'),
+	('Дальневосточный и Сибирский ФО','/TTH2020EAST/'),
+	('Уральский ФО'                  ,'/TTH2020URAL/'),
+	('Северо-Западный ФО'            ,'/TTH2020NW/'  ),
+	('Центральный ФО'                ,'/TTH2020CFO/' ),
+	('Приволжский ФО'                ,'/TTH2020POV/' ),
+	('Северо-Кавказский ФО'          ,'/TTH2020SKFO/'),
+	('Южный ФО'                      ,'/TTH2020YUG/' ),
+	('Зарубежье'                     ,'/TTH2020INT/' ),
 )
 
 poster_url = ''
