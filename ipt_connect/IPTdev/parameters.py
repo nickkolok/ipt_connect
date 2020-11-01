@@ -40,7 +40,7 @@ enable_apriori_rejections = False # False in most cases - TODO
 # The precision of scores
 # If 'None', no round up is made
 # If an integer N, then the scores for each Round are rounded up to 10^(-N)
-score_precision = None #TODO: use the same precision when displaying the results (as for now, it is always 2)
+score_precision = 2 #TODO: use the same precision when displaying the results (as for now, it is always 2)
 
 
 # Is the fight status displayed?
