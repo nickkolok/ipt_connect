@@ -5,10 +5,10 @@ from parameters_TTH2020 import *
 
 
 NAME = {
-    'short': 'ТТН 2019 Приволжье',
-    'full': 'Турнир Трёх Наук 2019 - Приволжский этап',
+    'short': 'ТТН 2020 Тест',
+    'full': 'Турнир Трёх Наук 2020 - тестовый инстанс',
     # ... and the name used in tournament overview
-    'front': 'Приволжский этап Федерального Студенческого Турнира Трёх Наук',
+    'front': 'Федерального Студенческого Турнира Трёх Наук',
 }
 
 # Tournaments to switch to by the menu
@@ -52,3 +52,177 @@ display_participants_max_grade_opp = True # Best Opp. grade
 display_participants_max_grade_rev = True # Best Rev. grade
 display_participants_sum_grade_tot = True # Total points
 
+if instance_name == 'TTH2020EAST':
+	NAME = {
+		'short': 'ТТН 2020 Восток',
+		'full': 'Турнир Трёх Наук 2020 - Дальневосточный и Сибирский федеральные округа',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Дальневосточном и Сибирском федеральных округах',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020URAL':
+	NAME = {
+		'short': 'ТТН 2020 Урал',
+		'full': 'Турнир Трёх Наук 2020 - Уральский федеральный округ',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Уральском федеральном округе',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020NW':
+	NAME = {
+		'short': 'ТТН 2020 Северо-Запад',
+		'full': 'Турнир Трёх Наук 2020 - Северо-Западный федеральный округ',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Северо-Западном федеральном округе',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020INT':
+	NAME = {
+		'short': 'ТТН 2020 Зарубежье',
+		'full': 'Турнир Трёх Наук 2020 - зарубежье',
+		# ... and the name used in tournament overview
+		'front': 'зарубежного отборочного этапа Федерального Студенческого Турнира Трёх Наук',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020CFO':
+	NAME = {
+		'short': 'ТТН 2020 Центр',
+		'full': 'Турнир Трёх Наук 2020 - Центральный федеральный округ',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Центральном федеральном округе',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020POV':
+	NAME = {
+		'short': 'ТТН 2020 Поволжье',
+		'full': 'Турнир Трёх Наук 2020 - Приволжский федеральный округ',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Приволжском федеральном округе',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020SKFO':
+	NAME = {
+		'short': 'ТТН 2020 Кавказ',
+		'full': 'Турнир Трёх Наук 2020 - Северо-Кавказский федеральный округ',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Северо-Кавказском федеральном округе',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020YUG':
+	NAME = {
+		'short': 'ТТН 2020 Юг',
+		'full': 'Турнир Трёх Наук 2020 - Южный федеральный округ',
+		# ... and the name used in tournament overview
+		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Южном федеральном округе',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 2       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
