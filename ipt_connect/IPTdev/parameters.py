@@ -22,7 +22,7 @@ sister_tournaments = (
 	('Приволжский ФО'                ,'/TTH2020POV/' ),
 	('Северо-Кавказский ФО'          ,'/TTH2020SKFO/'),
 	('Южный ФО'                      ,'/TTH2020YUG/' ),
-	('Зарубежье'                     ,'/TTH2020INT/' ),
+	('Международный этап'            ,'/TTH2020INT/' ),
 )
 
 poster_url = ''
@@ -60,7 +60,7 @@ display_participants_sum_grade_tot = True # Total points
 
 if instance_name == 'TTH2020EAST':
 	NAME = {
-		'short': 'ТТН 2020 Восток',
+		'short': 'ТТН 2020 ДФО и СФО',
 		'full': 'Турнир Трёх Наук 2020 - Дальневосточный и Сибирский федеральные округа',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Дальневосточном и Сибирском федеральных округах',
@@ -82,7 +82,7 @@ if instance_name == 'TTH2020EAST':
 
 elif instance_name == 'TTH2020URAL':
 	NAME = {
-		'short': 'ТТН 2020 Урал',
+		'short': 'ТТН 2020 УФО',
 		'full': 'Турнир Трёх Наук 2020 - Уральский федеральный округ',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Уральском федеральном округе',
@@ -104,7 +104,7 @@ elif instance_name == 'TTH2020URAL':
 
 elif instance_name == 'TTH2020NW':
 	NAME = {
-		'short': 'ТТН 2020 Северо-Запад',
+		'short': 'ТТН 2020 СЗФО',
 		'full': 'Турнир Трёх Наук 2020 - Северо-Западный федеральный округ',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Северо-Западном федеральном округе',
@@ -126,10 +126,10 @@ elif instance_name == 'TTH2020NW':
 
 elif instance_name == 'TTH2020INT':
 	NAME = {
-		'short': 'ТТН 2020 Зарубежье',
-		'full': 'Турнир Трёх Наук 2020 - зарубежье',
+		'short': 'ТТН 2020 Международный',
+		'full': 'Турнир Трёх Наук 2020 - Международный',
 		# ... and the name used in tournament overview
-		'front': 'зарубежного отборочного этапа Федерального Студенческого Турнира Трёх Наук',
+		'front': 'Международного отборочного этапа Федерального Студенческого Турнира Трёх Наук',
 	}
 
 	poster_url = ''
@@ -148,7 +148,7 @@ elif instance_name == 'TTH2020INT':
 
 elif instance_name == 'TTH2020CFO':
 	NAME = {
-		'short': 'ТТН 2020 Центр',
+		'short': 'ТТН 2020 ЦФО',
 		'full': 'Турнир Трёх Наук 2020 - Центральный федеральный округ',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Центральном федеральном округе',
@@ -170,7 +170,7 @@ elif instance_name == 'TTH2020CFO':
 
 elif instance_name == 'TTH2020POV':
 	NAME = {
-		'short': 'ТТН 2020 Поволжье',
+		'short': 'ТТН 2020 ПФО',
 		'full': 'Турнир Трёх Наук 2020 - Приволжский федеральный округ',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Приволжском федеральном округе',
@@ -192,7 +192,7 @@ elif instance_name == 'TTH2020POV':
 
 elif instance_name == 'TTH2020SKFO':
 	NAME = {
-		'short': 'ТТН 2020 Кавказ',
+		'short': 'ТТН 2020 СКФО',
 		'full': 'Турнир Трёх Наук 2020 - Северо-Кавказский федеральный округ',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Северо-Кавказском федеральном округе',
@@ -214,7 +214,7 @@ elif instance_name == 'TTH2020SKFO':
 
 elif instance_name == 'TTH2020YUG':
 	NAME = {
-		'short': 'ТТН 2020 Юг',
+		'short': 'ТТН 2020 ЮФО',
 		'full': 'Турнир Трёх Наук 2020 - Южный федеральный округ',
 		# ... and the name used in tournament overview
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Южном федеральном округе',
