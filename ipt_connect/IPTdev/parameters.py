@@ -31,11 +31,11 @@ website_url = 'http://iturnir.ru'
 
 
 # Tactical rejections
-enable_tactical_rejections = True # False e.g. for IYPT - TODO
+enable_tactical_rejections = True # False e.g. for IYPT
 npfreject_max = 2       # Maximum number of free tactical rejections (per fight)
-enable_eternal_rejections = True # False e.g. for IPT 2020 - TODO
+enable_eternal_rejections = True # False e.g. for IPT 2020
 netreject_max = 2       # Maximum number of free eternal rejections
-enable_apriori_rejections = False # False in most cases - TODO
+enable_apriori_rejections = False # False in most cases
 
 # The precision of scores
 # If 'None', no round up is made
