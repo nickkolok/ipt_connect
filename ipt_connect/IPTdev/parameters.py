@@ -71,8 +71,8 @@ if instance_name == 'TTH2020EAST':
 	website_url = 'http://iturnir.ru'
 
 
-	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
-	netreject_max = 2       # Maximum number of eternal rejection
+	npfreject_max = 1       # Maximum number of tactical rejection (per fight)
+	netreject_max = 1       # Maximum number of eternal rejection
 
 
 	# Is the fight status displayed?
@@ -94,7 +94,7 @@ elif instance_name == 'TTH2020URAL':
 
 
 	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
-	netreject_max = 2       # Maximum number of eternal rejection
+	netreject_max = 1       # Maximum number of eternal rejection
 
 
 	# Is the fight status displayed?
@@ -115,8 +115,8 @@ elif instance_name == 'TTH2020NW':
 	website_url = 'http://iturnir.ru'
 
 
-	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
-	netreject_max = 2       # Maximum number of eternal rejection
+	npfreject_max = 1       # Maximum number of tactical rejection (per fight)
+	netreject_max = 1       # Maximum number of eternal rejection
 
 
 	# Is the fight status displayed?
