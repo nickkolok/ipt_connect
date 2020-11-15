@@ -4,7 +4,7 @@ DATE=`date +%Y-%m-%d---%H-%M-%S`
 
 scp voronezh.iptnet.info:/root/html/ipt/ipt_connect/ipt_connect/db.sqlite3 ./db-$DATE.sqlite3
 
-INSTANCES="YUG SKFO INT EAST URAL NW CFO POV"
+INSTANCES="YUG SKFO INT CFO POV"
 
 for instance in $INSTANCES ; do
 	echo $instance
