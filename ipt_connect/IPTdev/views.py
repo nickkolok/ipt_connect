@@ -30,7 +30,7 @@ def ninja_test(user):
 	# Firstly, the values from `params` should be used.
 	# Secondly, all the stuff should be moved to a more appropriate place!
 	from django.utils.translation import activate
-	activate('ru-RU')
+	activate('ruttn')
 	return user.is_staff or not SiteConfiguration.get_solo().only_staff_access
 
 @cache_page(cache_duration_short)
