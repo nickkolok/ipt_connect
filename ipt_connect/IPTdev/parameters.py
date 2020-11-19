@@ -154,7 +154,7 @@ elif instance_name == 'TTH2020CFO':
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Центральном федеральном округе',
 	}
 
-	poster_url = ''
+	poster_url = 'https://habrastorage.org/webt/j1/tf/54/j1tf54dncriekm7gnhwjuztbrl4.jpeg'
 
 	website_url = 'http://iturnir.ru'
 
@@ -165,7 +165,7 @@ elif instance_name == 'TTH2020CFO':
 
 	# Is the fight status displayed?
 	# Looks like there are some problems with it, so making it switchable
-	display_pf_status = False
+	display_pf_status = True
 
 
 elif instance_name == 'TTH2020POV':
@@ -176,7 +176,7 @@ elif instance_name == 'TTH2020POV':
 		'front': 'отборочного этапа Федерального Студенческого Турнира Трёх Наук в Приволжском федеральном округе',
 	}
 
-	poster_url = ''
+	poster_url = 'https://habrastorage.org/webt/mb/z6/jv/mbz6jvkmiakx3dyvxrim1ceqwxg.jpeg'
 
 	website_url = 'http://iturnir.ru'
 
@@ -187,7 +187,7 @@ elif instance_name == 'TTH2020POV':
 
 	# Is the fight status displayed?
 	# Looks like there are some problems with it, so making it switchable
-	display_pf_status = False
+	display_pf_status = True
 
 
 elif instance_name == 'TTH2020SKFO':
