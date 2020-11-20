@@ -132,13 +132,13 @@ elif instance_name == 'TTH2020INT':
 		'front': 'Международного отборочного этапа Федерального Студенческого Турнира Трёх Наук',
 	}
 
-	poster_url = ''
+	poster_url = 'https://habrastorage.org/webt/g2/py/kg/g2pykgp36ashcmggei_2gp3icre.jpeg'
 
 	website_url = 'http://iturnir.ru'
 
 
-	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
-	netreject_max = 2       # Maximum number of eternal rejection
+	npfreject_max = 1       # Maximum number of tactical rejection (per fight)
+	netreject_max = 1       # Maximum number of eternal rejection
 
 
 	# Is the fight status displayed?
