@@ -143,7 +143,7 @@ elif instance_name == 'TTH2020INT':
 
 	# Is the fight status displayed?
 	# Looks like there are some problems with it, so making it switchable
-	display_pf_status = False
+	display_pf_status = True
 
 
 elif instance_name == 'TTH2020CFO':
@@ -209,7 +209,7 @@ elif instance_name == 'TTH2020SKFO':
 
 	# Is the fight status displayed?
 	# Looks like there are some problems with it, so making it switchable
-	display_pf_status = False
+	display_pf_status = True
 
 
 elif instance_name == 'TTH2020YUG':
@@ -231,4 +231,4 @@ elif instance_name == 'TTH2020YUG':
 
 	# Is the fight status displayed?
 	# Looks like there are some problems with it, so making it switchable
-	display_pf_status = False
+	display_pf_status = True
