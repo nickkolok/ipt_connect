@@ -132,7 +132,7 @@ elif instance_name == 'TTH2020INT':
 		'front': 'Международного отборочного этапа Федерального Студенческого Турнира Трёх Наук',
 	}
 
-	poster_url = 'https://habrastorage.org/webt/g2/py/kg/g2pykgp36ashcmggei_2gp3icre.jpeg'
+	poster_url = 'https://habrastorage.org/webt/gh/d1/hm/ghd1hmp2xl6aws4llhznx938fbw.jpeg'
 
 	website_url = 'http://iturnir.ru'
 
