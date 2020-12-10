@@ -15,6 +15,7 @@ NAME = {
 # Usually you should set it to None
 # This is useful only for development and first stages of Three Science Tournament
 sister_tournaments = (
+	('Финальный этап'                ,'/TTH2020FINAL/'),
 	('Дальневосточный и Сибирский ФО','/TTH2020EAST/'),
 	('Уральский ФО'                  ,'/TTH2020URAL/'),
 	('Северо-Западный ФО'            ,'/TTH2020NW/'  ),
