@@ -231,4 +231,26 @@ elif instance_name == 'TTH2020YUG':
 
 	# Is the fight status displayed?
 	# Looks like there are some problems with it, so making it switchable
+	display_pf_status = False
+
+
+elif instance_name == 'TTH2020FINAL':
+	NAME = {
+		'short': 'ТТН 2020 Финал',
+		'full': 'Турнир Трёх Наук 2020 - Финальный этап',
+		# ... and the name used in tournament overview
+		'front': 'финального этапа Федерального Студенческого Турнира Трёх Наук',
+	}
+
+	poster_url = ''
+
+	website_url = 'http://iturnir.ru'
+
+
+	npfreject_max = 2       # Maximum number of tactical rejection (per fight)
+	netreject_max = 3       # Maximum number of eternal rejection
+
+
+	# Is the fight status displayed?
+	# Looks like there are some problems with it, so making it switchable
 	display_pf_status = True
