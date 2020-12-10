@@ -732,7 +732,8 @@ def update_points(sender, instance, **kwargs):
 		teams = [instance.reporter_team, instance.opponent_team, instance.reviewer_team]
 		# then compute teams (and participants) scores
 		for team in teams:
-			team.update_scores()
+			if not (team is None):
+				team.update_scores()
 
 		# and the problem mean scores
 		instance.problem_presented.update_scores()
